@@ -10,12 +10,14 @@ LIB := "C:\SFML-2.5.1\lib"
 LIBARIES :=  -lsfml-graphics -lsfml-window -lsfml-system -lopengl32
 EXECUTABLE := main.exe # You can change it according to your liking
 
+# $(SRC)/*/*.cpp
+
 all : build clean
 
 build : compile link
 
 compile:
-	g++ -c $(SRC)/*.cpp -I$(SFML_INCLUDE) -I$(INCLUDE)	
+	g++ -c $(SRC)/*.cpp $(SRC)/*/*.cpp -I$(SFML_INCLUDE) -I$(INCLUDE)  
 
 link:
 	g++ *.o -o $(BIN)/$(EXECUTABLE) -L$(LIB) $(LIBARIES)

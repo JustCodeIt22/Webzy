@@ -1,22 +1,25 @@
 #include "Webzy.hpp"
+#include "Styles.hpp"
 
 // Initiating
 Webzy::Webzy() 
-:window(sf::VideoMode(WIDTH, HEIGHT), TITLE)
+:MainWindow(sf::VideoMode(WIDTH, HEIGHT), TITLE)
 {
+
     // Initiating ImGui
-    ImGui::SFML::Init(window);
+    ImGui::SFML::Init(MainWindow);
     ImGuiIO &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable Docking
-    ImGui::StyleColorsClassic();
+    Styles::setFancyImguiStyle(); // Setting Style
 
     // Setting Fonts;
     io.Fonts->Clear();
-    // Setting Font
-    // Font Awesome
     ImFontConfig config;
-    io.Fonts->AddFontFromFileTTF("../res/fonts/JetBrainsMono-Regular.ttf", 22);
+    io.Fonts->AddFontFromFileTTF("../res/fonts/Roboto-Regular.ttf", 22);
     ImGui::SFML::UpdateFontTexture();
+
+    ctrl = false;
+
 }
 
 
@@ -24,41 +27,64 @@ Webzy::Webzy()
 // Handle Events
 void Webzy::handle_events(){
     sf::Event event;
-    while (window.pollEvent(event))
+    while (MainWindow.pollEvent(event))
     {
         ImGui::SFML::ProcessEvent(event);
+        viewport_panel.handle_events(event);
+
         if(event.type == sf::Event::Closed){
-            window.close();
+            MainWindow.close();
+        }
+
+        // KeyDown Events
+        if(event.type == sf::Event::KeyPressed){
+            // Ctrl Key
+            if(event.key.code == sf::Keyboard::LControl){
+                ctrl = true;
+            }
+            else if(event.key.code == sf::Keyboard::Q && ctrl){// Exit -> CTRL + Q
+                MainWindow.close();
+            }
+        }
+
+
+        // KeyUp Event
+        if(event.type == sf::Event::KeyReleased){
+            if(event.key.code == sf::Keyboard::LControl){
+                ctrl = false;
+            }
         }
     }
 }
 
 
 void Webzy::update(){
-    ImGui::SFML::Update(window, deltaClock.restart());
+    ImGui::SFML::Update(MainWindow, deltaClock.restart());
     ImGui::DockSpaceOverViewport();
-}
-
-
-// Render Panels
-void render_panels(){
-    ImGui::ShowDemoWindow();
 }
 
 
 // Main Render
 void Webzy::render(){
-    render_panels();
+    menu_bar.render();
+    component_panel.renderUI();
+    properties_panel.renderUI();
+    viewport_panel.renderUI();
+    
+ 
 
-    window.clear(sf::Color::Black);
-    ImGui::SFML::Render(window);
-    window.display();
+    viewport_panel.render();
+
+    // Render Window
+    MainWindow.clear(sf::Color::Black);
+    ImGui::SFML::Render(MainWindow);
+    MainWindow.display();
 }
 
 
 // run method
 void Webzy::run(){
-    while(window.isOpen()){
+    while(MainWindow.isOpen()){
         handle_events();
         update();
         render();
