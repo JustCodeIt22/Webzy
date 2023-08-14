@@ -66,14 +66,14 @@ void Webzy::update(){
 
 // Main Render
 void Webzy::render(){
-    menu_bar.render();
+    menu_bar.render(MainWindow);
     component_panel.renderUI();
     properties_panel.renderUI();
     viewport_panel.renderUI();
     
  
-
     viewport_panel.render();
+    ImGui::ShowDemoWindow();
 
     // Render Window
     MainWindow.clear(sf::Color::Black);

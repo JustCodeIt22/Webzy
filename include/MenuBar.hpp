@@ -1,5 +1,7 @@
 #pragma once
 #include "imgui.h"
+#include "SFML/Graphics.hpp"
+#include <iostream>
 
 class MenuBar{
     public:
@@ -7,5 +9,5 @@ class MenuBar{
         friend class Webzy;
         
     private:
-        void render();
+        void render(sf::RenderWindow &window);
 };
