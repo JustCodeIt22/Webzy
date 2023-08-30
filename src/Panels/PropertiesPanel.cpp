@@ -1,9 +1,13 @@
 #include "Panels/PropertiesPanel.hpp"
-#include "imgui.h"
 
-PropertiesPanel::PropertiesPanel(){}
+// ================== Constructor ==============================//
+PropertiesPanel::PropertiesPanel(){
+}
 
-void PropertiesPanel::renderUI(){
+
+// ================== Render UI ==============================//
+void PropertiesPanel::renderUI(ViewPortPanel &vpp){
     ImGui::Begin("Properties Panel");
+    vpp.renderProperties();             // renders properties of the selected component
     ImGui::End();
 }

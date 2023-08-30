@@ -1,9 +1,9 @@
 #pragma once
+#include <vector>
+
 #include "imgui.h"
-// My Includes
-#include "HTMLComponents/Component.hpp"
-#include "HTMLComponents/Text.hpp"
-#include "HTMLComponents/Image.hpp"
+
+#include "HTMLComponents/ComponentLoader.hpp"
 
 class ComponentPanel{
     public:
@@ -15,5 +15,5 @@ class ComponentPanel{
         void renderUI();
     
     private:
-        Component *htmlComponents[2];
+        std::unique_ptr<std::vector<const char*>> htmlComponents;
 };

@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+
 #include "imgui.h"
 
 namespace Utils{
@@ -10,10 +12,4 @@ namespace Utils{
         float av = alpha/255.f;     // alpha_value
         return ImVec4{r, g, b, av};
     }
-
-    
-
-    
-
-
 }

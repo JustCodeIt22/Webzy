@@ -4,10 +4,12 @@
 #include "imgui-SFML.h"
 #include "imgui.h"
 #include "fontAwesome.h"
+
 #include "MenuBar.hpp"
 #include "Panels/ComponentPanel.hpp"
 #include "Panels/PropertiesPanel.hpp"
 #include "Panels/ViewPortPanel.hpp"
+
 #define WIDTH 800 
 #define HEIGHT 600
 #define TITLE "Webzy"

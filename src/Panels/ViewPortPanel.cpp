@@ -1,6 +1,5 @@
 #include "Panels/ViewPortPanel.hpp"
 
-
 ViewPortPanel::ViewPortPanel()
 :m_mainView(m_windowTexture.getDefaultView())
 {
@@ -13,75 +12,77 @@ ViewPortPanel::ViewPortPanel()
     viewPort_h = 1023;
 
     // Canvas Setup
-    canvas_w = 900;
-    canvas_h = 600;
+    float scale = 1.7;
+    canvas_w = 1920/scale;
+    canvas_h = 1080/scale;
+    canvas_x = viewPort_w/2;
+    canvas_y = viewPort_h/2;
     canvas_color = sf::Color(255, 255, 255, 255);
     canvas.setSize(sf::Vector2f(canvas_w, canvas_h));
     canvas.setOrigin(sf::Vector2f(canvas_w/2, canvas_h/2));
-    canvas.setPosition(viewPort_w/2 - 150.5, viewPort_h/2);
+    canvas.setPosition(canvas_x, canvas_y);
     canvas.setFillColor(canvas_color);
+
+    // component pos
+    componentName = "None";
+    componentPosX =  2000;
+    componentPosY = 2000;
+
+    // debug circle
+    debugCircle.setRadius(20);
+    debugCircle.setFillColor(sf::Color::Red);
+
+    // html component on viewport
 }
 
 
-// ================================ Destructor ================================================ #
+// ================================ Create New Canvas ======================================== #
+void ViewPortPanel::createNewCanvas(){
+    // TODO 
+}
 
 
 // =================================== ViewPort Handle Events =============================== #
 void ViewPortPanel::handle_events(sf::Event &event){
     // handling zoom events
     if(m_isHovered){
+        // Keyboard Events
+        if(event.type == sf::Event::KeyPressed){
+            if(event.key.code == sf::Keyboard::P){
+                file.open("webzyUILog.txt");
+                for(auto &component:htmlComponentsOnViewPort){
+                    int compID = component.first;
+                    std::shared_ptr<Component> comp = component.second.first;
+                    std::cout << compID << " " << comp->getName() << "\n";
+                    file << compID << " " << comp->getName() << "\n";
+                }
+                file.close();
+            }
+        }
+
         // zooming 
         if(event.type == sf::Event::MouseWheelMoved){
             if(event.mouseWheel.delta > 0){ 
-                m_mainView.zoom(0.9f); // zoom in 
+                m_mainView.zoom(zoomInDelta); // zoom in 
             } 
             else if(event.mouseWheel.delta < 0){
-                m_mainView.zoom(1.1f); // zoom out
+                m_mainView.zoom(zoomOutDelta); // zoom out
             }
             m_windowTexture.setView(m_mainView);
         }
 
         if(event.type == sf::Event::MouseButtonPressed){
-            sf::Vector2i mouse_pos = sf::Mouse::getPosition();
-            std::cout << mouse_pos.x - 303 << " " << mouse_pos.y - 88 << "\n";
+            debugCircle.setPosition(mousePosX, mousePosY);
         }
     }
 }
 
-
-// For Resizing and Placing the object according to ViewPort aspect ratio
-sf::View getLetterboxView(sf::View view, int windowWidth, int windowHeight) {
-
-    // Compares the aspect ratio of the window to the aspect ratio of the view,
-    // and sets the view's viewport accordingly in order to archieve a letterbox effect.
-    // A new view (with a new viewport set) is returned.
-
-    float windowRatio = windowWidth / (float) windowHeight;
-    float viewRatio = view.getSize().x / (float) view.getSize().y;
-    float viewWidth = 1;
-    float viewHeight = 1;
-    float viewposX = 0;
-    float viewposY = 0;
-
-    bool horizontalSpacing = true;
-    if (windowRatio < viewRatio)
-        horizontalSpacing = false;
-
-    // If horizontalSpacing is true, the black bars will appear on the left and right side.
-    // Otherwise, the black bars will appear on the top and bottom.
-
-    if (horizontalSpacing) {
-        viewWidth = viewRatio / windowRatio;
-        viewposX = (1 - viewWidth) / 2.f;
-    } else {
-        viewHeight = windowRatio / viewRatio;
-        viewposY = (1 - viewHeight) / 2.f;
-    }
-
-    view.setViewport( sf::FloatRect(viewposY, viewposY, viewWidth, viewHeight) );
-
-    return view;
+// =================================== Render Properties ===============================//
+void ViewPortPanel::renderProperties(){
+    if(htmlComponentsOnViewPort.size())
+        htmlComponentsOnViewPort.at(componentID - 1).first->renderProperties(); // Component.renderProperties()
 }
+
 
 
 // Render the ui
@@ -91,31 +92,72 @@ void ViewPortPanel::renderUI(){
     ImGui::Begin("ViewPort Panel", nullptr, ImGuiWindowFlags_NoScrollbar);
     ImVec2 viewport_size = ImGui::GetContentRegionAvail();
     ImGui::Image(m_windowTexture, sf::Vector2f(viewport_size.x, viewport_size.y));
-    // m_windowTexture.setView(getLetterboxView(m_mainView, viewport_size.x, viewport_size.y));
-    m_isHovered = ImGui::IsWindowHovered();
+
+
+    // setting camera
+    float aspectRatio = float(viewport_size.x) / float(viewport_size.y);
+    m_mainView.setSize(m_mainView.getSize().y * aspectRatio, m_mainView.getSize().y);
+    m_mainView.setCenter(viewport_size.x/2, viewport_size.y/2);
+
+    // setting mouse Pos
+    mousePosX = (sf::Mouse::getPosition().x * (m_mainView.getSize().x/viewport_size.x)) - ImGui::GetWindowPos().x - 10;
+    mousePosY = (sf::Mouse::getPosition().y * (m_mainView.getSize().y/viewport_size.y)) - ImGui::GetWindowPos().y - 84;
+
+
+    m_isHovered = ImGui::IsWindowHovered();         // VIEW_PORT_PANEL_HOVERED
+    viewPort_x = ImGui::GetWindowPos().x;
+    viewPort_y = ImGui::GetWindowPos().y;
     
     
     // Drag and Drop
     if(ImGui::BeginDragDropTarget()){
         if(const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("HTMLComponents")){
-            const char* s = (const char*)payload;
-            std::cout << s;
-            ImGui::Button("Done");
+            // writing in files
+            componentName = (const char*)payload->Data;      // get the componentName
+            std::cout << componentName;
+            std::cout << HTML_COMPONENTS.at(componentName)->getName() << "\n";
+            std::cout << HTML_COMPONENTS.at(componentName)->properties->getProperty("Color") << "\n";
+           
+            
+            // placing htmlComponents
+            int offsetX = 421; // Component Panel width
+            int offsetY = 276; // Menubar + Titlebar height
+            componentPosX =  mousePosX;
+            componentPosY = mousePosY;
+            std::cout << componentPosX << " " << componentPosY << std::endl;
+            htmlComponentsOnViewPort[componentID].first = HTML_COMPONENTS.at(componentName);   // storing the component
+            htmlComponentsOnViewPort[componentID].second = sf::Vector2f(mousePosX, mousePosY); // storing the mousePosition in unorder_map
+            componentID++;
         }
         ImGui::EndDragDropTarget();
     }
 
-
     ImGui::End();
-    ImGui::PopStyleVar(); 
+    ImGui::PopStyleVar();
+
 }
 
+
+// Rendering Properties of current selected Component on Property Panel
+void ViewPortPanel::handle_properties_to_render(){
+    ImGui::Button("Body");
+}
 
 
 // Display the main content
 void ViewPortPanel::render(){
-
+    m_windowTexture.setView(m_mainView);
     m_windowTexture.clear(bg_color);
     m_windowTexture.draw(canvas);
+    if(htmlComponentsOnViewPort.size()){
+        for(auto &component:htmlComponentsOnViewPort){
+            std::shared_ptr<Component> comp = component.second.first;
+            sf::RectangleShape rect = comp->getBgRect();
+            sf::Vector2f compPos = component.second.second;
+            rect.setPosition(compPos);
+            m_windowTexture.draw(rect); // gets the bgRect of the respective component
+        }
+    }
+    m_windowTexture.draw(debugCircle);
     m_windowTexture.display();
 }

@@ -5,7 +5,6 @@
 Webzy::Webzy() 
 :MainWindow(sf::VideoMode(WIDTH, HEIGHT), TITLE)
 {
-
     // Initiating ImGui
     ImGui::SFML::Init(MainWindow);
     ImGuiIO &io = ImGui::GetIO();
@@ -21,7 +20,6 @@ Webzy::Webzy()
     ctrl = false;
 
 }
-
 
 
 // Handle Events
@@ -47,7 +45,6 @@ void Webzy::handle_events(){
             }
         }
 
-
         // KeyUp Event
         if(event.type == sf::Event::KeyReleased){
             if(event.key.code == sf::Keyboard::LControl){
@@ -68,8 +65,8 @@ void Webzy::update(){
 void Webzy::render(){
     menu_bar.render(MainWindow);
     component_panel.renderUI();
-    properties_panel.renderUI();
     viewport_panel.renderUI();
+    properties_panel.renderUI(viewport_panel);
     
  
     viewport_panel.render();
